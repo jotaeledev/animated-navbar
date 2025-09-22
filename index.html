@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Animado</title>
+</head>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+    
+    html {
+        background:white;
+        padding:12px;
+    }
+
+    body {
+        min-height: 100vh;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #C7C7C9 0%, #A8A8AA 100%);
+        padding:24px;
+    }
+    
+    nav {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        max-width: fit-content;
+        gap: 44px;
+        background-color: white;
+        margin: 0 auto;
+        border-radius: 80px;
+        padding: 12px 24px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    nav::before {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: #000000;
+        border-radius: 50%;
+        transform: scale(0);
+        transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        z-index: 1;
+    }
+    
+    nav a {
+        text-decoration: none;
+        color: #333;
+        position: relative;
+        z-index: 2;
+        padding: 12px 20px;
+        border-radius: 25px;
+        transition: color 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    nav a.active {
+        color: white;
+        transition: color 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    
+    /* Efecto de ondas adicional */
+    nav::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+        z-index: 0;
+    }
+</style>
+<body>
+    <header>
+        <nav id="nav">
+            <a href="#" data-text="Tecnología">Tecnología</a>
+            <a href="#" data-text="Diseño">Diseño</a>
+            <a href="#" data-text="Productos">Productos</a>
+            <a href="#" data-text="Contáctanos">Contáctanos</a>
+            <a href="#" data-text="Faq">Faq</a>
+        </nav>
+    </header>
+
+    <script>
+        const nav = document.getElementById('nav');
+        const navItems = nav.querySelectorAll('a');
+        const bubble = nav.querySelector('::before');
+        
+       
+        navItems[0].classList.add('active');
+        
+        function updateBubble(element, isInitial = false) {
+            const navRect = nav.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+            
+            const left = elementRect.left - navRect.left;
+            const top = elementRect.top - navRect.top;
+            const width = elementRect.width;
+            const height = elementRect.height;
+            
+            currentBubblePosition = {
+                left: left + width/2,
+                top: top + height/2
+            };
+            
+            const style = document.createElement('style');
+            const transitionDuration = isInitial ? '0.5s' : '0.5s';
+            const transitionDelay = isInitial ? '0s' : '0.1s';
+            
+            style.textContent = `
+                nav::before {
+                    left: ${left + width/2}px;
+                    top: ${top + height/2}px;
+                    width: ${width + 12}px;
+                    height: ${height + 6}px;
+                    border-radius: ${height/2 + 6}px;
+                    transform: scale(1) translate(-50%, -50%);
+                    background: #000000;
+                    transition: all ${transitionDuration} cubic-bezier(0.25, 0.46, 0.45, 0.94) ${transitionDelay};
+                }
+            `;
+            
+            const oldStyle = document.getElementById('bubble-style');
+            if (oldStyle) {
+                oldStyle.remove();
+            }
+            
+            style.id = 'bubble-style';
+            document.head.appendChild(style);
+        }
+        
+        let currentBubblePosition = { left: 0, top: 0 };
+        let isAnimating = false;
+        
+        function shrinkBubble() {
+            const currentStyle = document.getElementById('bubble-style');
+            if (currentStyle) {
+                currentStyle.textContent = `
+                    nav::before {
+                        left: ${currentBubblePosition.left}px;
+                        top: ${currentBubblePosition.top}px;
+                        width: 22px;
+                        height: 22px;
+                        border-radius: 50%;
+                        transform: scale(1) translate(-50%, -50%);
+                        background: #000000;
+                        transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+                    }
+                `;
+            }
+        }
+        
+        setTimeout(() => {
+            updateBubble(navItems[0], true);
+        }, 100);
+        
+        navItems.forEach((item, index) => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                if (this.classList.contains('active') || isAnimating) return;
+                
+                isAnimating = true;
+                
+                navItems.forEach(navItem => {
+                    navItem.classList.remove('active');
+                });
+                
+                shrinkBubble();
+                
+                setTimeout(() => {
+                    updateBubble(this);
+                    setTimeout(() => {
+                        this.classList.add('active');
+                        isAnimating = false;
+                    }, 200);
+                }, 300);
+            });
+        });
+        
+        window.addEventListener('resize', () => {
+            const activeItem = nav.querySelector('a.active');
+            if (activeItem) {
+                setTimeout(() => {
+                    updateBubble(activeItem);
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
